@@ -3,6 +3,7 @@ beta = 0.3  # Constant transmission rate
 gamma = 0.1  # Recovery rate
 lambda_val = 0.05  # Immunity loss rate
 initial_population = 1000  # Total population size
+T_inf = 1.0 / gamma  # Mean infectious duration
 
 # Initial conditions
 S = 0.99 * initial_population  # Initial susceptible count
@@ -22,8 +23,8 @@ recovered_list = [R]
 for step in range(num_steps):
     # Calculate new counts for each compartment
     new_S = S - (beta * S * I / initial_population) * time_step + lambda_val * R * time_step
-    new_I = I + ((beta * S * I / initial_population) - gamma * I) * time_step
-    new_R = R + (gamma * I - lambda_val * R) * time_step
+    new_I = I + ((beta * S * I / initial_population) - gamma * I) * time_step - I * (time_step / T_inf)
+    new_R = R + (gamma * I - lambda_val * R) * time_step + I * (time_step / T_inf)
 
     # Update compartment counts
     S = new_S
@@ -47,7 +48,7 @@ plt.plot(t, infectious_list, label='Infectious')
 plt.plot(t, recovered_list, label='Recovered')
 plt.xlabel('Time')
 plt.ylabel('Count')
-plt.title('SIRS Model Simulation with Constant Transmission Rate (Exposed = Susceptible)')
+plt.title('SIRS Model Simulation with Constant Transmission Rate and Exponential Infectiousness Duration')
 plt.legend()
 plt.grid()
 plt.show()
