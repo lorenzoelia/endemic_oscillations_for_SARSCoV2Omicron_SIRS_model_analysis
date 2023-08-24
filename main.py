@@ -4,6 +4,7 @@ gamma = 0.1  # Recovery rate
 lambda_val = 0.05  # Immunity loss rate
 alpha = 0.08  # Immunity waning rate
 sigma = 0.005  # Vaccination rate (fraction of susceptibles vaccinated per day)
+delta = 0.01  # Demographic balanced birth and death rate
 initial_population = 1000  # Total population size
 T_inf = 1.0 / gamma  # Mean infectious duration
 T_imm = 1.0 / alpha  # Mean immunity duration
@@ -27,10 +28,13 @@ vaccinated_list = [V]
 # Simulation loop
 for step in range(num_steps):
     # Calculate new counts for each compartment
-    new_S = S - (beta * S * I / initial_population) * time_step + lambda_val * R * time_step - sigma * S * time_step
-    new_I = I + ((beta * S * I / initial_population) - gamma * I) * time_step - I * (time_step / T_inf)
-    new_R = R + (gamma * I - lambda_val * R) * time_step + I * (time_step / T_inf) - R * (time_step / T_imm)
-    new_V = V + sigma * S * time_step + R * (time_step / T_imm)
+    new_S = S - (
+                beta * S * I / initial_population) * time_step + lambda_val * R * time_step - sigma * S * time_step + delta * initial_population * time_step
+    new_I = I + ((beta * S * I / initial_population) - gamma * I) * time_step - I * (
+                time_step / T_inf) - delta * I * time_step
+    new_R = R + (gamma * I - lambda_val * R) * time_step + I * (time_step / T_inf) - R * (
+                time_step / T_imm) - delta * R * time_step
+    new_V = V + sigma * S * time_step + R * (time_step / T_imm) - delta * V * time_step
 
     # Update compartment counts
     S = new_S
@@ -57,7 +61,7 @@ plt.plot(t, recovered_list, label='Recovered')
 plt.plot(t, vaccinated_list, label='Vaccinated')
 plt.xlabel('Time')
 plt.ylabel('Count')
-plt.title('SIRS Model Simulation with Vaccination and Exponential Dynamics')
+plt.title('SIRS Model Simulation with Vaccination, Exponential Dynamics, and Demographic Balance')
 plt.legend()
 plt.grid()
 plt.show()
