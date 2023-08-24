@@ -1,67 +1,49 @@
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.integrate import odeint
+
 # Parameters
-beta = 0.3  # Constant transmission rate
-gamma = 0.1  # Recovery rate
+beta = 0.3       # Constant transmission rate
+gamma = 0.1      # Recovery rate
 lambda_val = 0.05  # Immunity loss rate
-alpha = 0.08  # Immunity waning rate
-sigma = 0.005  # Vaccination rate (fraction of susceptibles vaccinated per day)
-delta = 0.01  # Demographic balanced birth and death rate
+alpha = 0.08     # Immunity waning rate
+sigma = 0.005    # Vaccination rate (fraction of susceptibles vaccinated per day)
+delta = 0.01     # Demographic balanced birth and death rate
 initial_population = 1000  # Total population size
-T_inf = 1.0 / gamma  # Mean infectious duration
-T_imm = 1.0 / alpha  # Mean immunity duration
+
+# System of ODEs
+def sirs_model(y, t, beta, gamma, lambda_val, alpha, sigma, delta):
+    S, I, R, V = y
+
+    dSdt = delta - (beta * S * I) / (S + I + R + V) + lambda_val * R - sigma * S
+    dIdt = (beta * S * I) / (S + I + R + V) - gamma * I - alpha * I - delta * I
+    dRdt = gamma * I + alpha * I - lambda_val * R - delta * R
+    dVdt = sigma * S + alpha * R - delta * V
+
+    return [dSdt, dIdt, dRdt, dVdt]
 
 # Initial conditions
-S = 0.99 * initial_population  # Initial susceptible count
-I = 0.01 * initial_population  # Initial infectious count
-R = 0.0  # Initial recovered count
-V = 0.0  # Initial vaccinated count
+S0 = 0.99 * initial_population
+I0 = 0.01 * initial_population
+R0 = 0.0
+V0 = 0.0
 
-# Time steps
-num_steps = 1000
-time_step = 0.1
+# Time points
+t = np.linspace(0, 100, 1000)
 
-# Lists to store simulation results
-susceptible_list = [S]
-infectious_list = [I]
-recovered_list = [R]
-vaccinated_list = [V]
-
-# Simulation loop
-for step in range(num_steps):
-    # Calculate new counts for each compartment
-    new_S = S - (
-                beta * S * I / initial_population) * time_step + lambda_val * R * time_step - sigma * S * time_step + delta * initial_population * time_step
-    new_I = I + ((beta * S * I / initial_population) - gamma * I) * time_step - I * (
-                time_step / T_inf) - delta * I * time_step
-    new_R = R + (gamma * I - lambda_val * R) * time_step + I * (time_step / T_inf) - R * (
-                time_step / T_imm) - delta * R * time_step
-    new_V = V + sigma * S * time_step + R * (time_step / T_imm) - delta * V * time_step
-
-    # Update compartment counts
-    S = new_S
-    I = new_I
-    R = new_R
-    V = new_V
-
-    # Store results
-    susceptible_list.append(S)
-    infectious_list.append(I)
-    recovered_list.append(R)
-    vaccinated_list.append(V)
-
-# Time points for plotting
-t = [time_step * i for i in range(num_steps + 1)]
+# Solve the ODEs
+solution = odeint(sirs_model, [S0, I0, R0, V0], t, args=(beta, gamma, lambda_val, alpha, sigma, delta))
+S, I, R, V = solution.T
 
 # Plot the results
-import matplotlib.pyplot as plt
-
 plt.figure(figsize=(10, 6))
-plt.plot(t, susceptible_list, label='Susceptible')
-plt.plot(t, infectious_list, label='Infectious')
-plt.plot(t, recovered_list, label='Recovered')
-plt.plot(t, vaccinated_list, label='Vaccinated')
+plt.plot(t, S, label='Susceptible')
+plt.plot(t, I, label='Infectious')
+plt.plot(t, R, label='Recovered')
+plt.plot(t, V, label='Vaccinated')
 plt.xlabel('Time')
 plt.ylabel('Count')
-plt.title('SIRS Model Simulation with Vaccination, Exponential Dynamics, and Demographic Balance')
+plt.title('SIRS Model Simulation as ODEs')
 plt.legend()
 plt.grid()
 plt.show()
