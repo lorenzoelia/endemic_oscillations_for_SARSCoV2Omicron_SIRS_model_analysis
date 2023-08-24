@@ -1,12 +1,13 @@
 # Parameters
-beta = 0.3  # Transmission rate
+beta = 0.3  # Constant transmission rate
 gamma = 0.1  # Recovery rate
 lambda_val = 0.05  # Immunity loss rate
+initial_population = 1000  # Total population size
 
 # Initial conditions
-S = 0.99  # Initial susceptible fraction
-I = 0.01  # Initial infectious fraction
-R = 0.0  # Initial recovered fraction
+S = 0.99 * initial_population  # Initial susceptible count
+I = 0.01 * initial_population  # Initial infectious count
+R = 0.0  # Initial recovered count
 
 # Time steps
 num_steps = 1000
@@ -19,12 +20,12 @@ recovered_list = [R]
 
 # Simulation loop
 for step in range(num_steps):
-    # Calculate new fractions for each compartment
-    new_S = S - beta * S * I * time_step + lambda_val * R * time_step
-    new_I = I + (beta * S * I - gamma * I) * time_step
-    new_R = R + gamma * I * time_step - lambda_val * R * time_step
+    # Calculate new counts for each compartment
+    new_S = S - (beta * S * I / initial_population) * time_step + lambda_val * R * time_step
+    new_I = I + ((beta * S * I / initial_population) - gamma * I) * time_step
+    new_R = R + (gamma * I - lambda_val * R) * time_step
 
-    # Update compartment fractions
+    # Update compartment counts
     S = new_S
     I = new_I
     R = new_R
@@ -45,8 +46,8 @@ plt.plot(t, susceptible_list, label='Susceptible')
 plt.plot(t, infectious_list, label='Infectious')
 plt.plot(t, recovered_list, label='Recovered')
 plt.xlabel('Time')
-plt.ylabel('Fraction of Population')
-plt.title('SIRS Model Simulation (Homogeneously Mixed)')
+plt.ylabel('Count')
+plt.title('SIRS Model Simulation with Constant Transmission Rate')
 plt.legend()
 plt.grid()
 plt.show()
