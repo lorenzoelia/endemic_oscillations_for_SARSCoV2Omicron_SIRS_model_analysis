@@ -1,42 +1,52 @@
-import numpy as np
-from scipy.integrate import odeint
-import matplotlib.pyplot as plt
-
 # Parameters
-beta = 0.3   # Transmission rate
+beta = 0.3  # Transmission rate
 gamma = 0.1  # Recovery rate
 lambda_val = 0.05  # Immunity loss rate
 
 # Initial conditions
-S0 = 0.99  # Initial susceptible fraction
-I0 = 0.01  # Initial infectious fraction
-R0 = 0.0   # Initial recovered fraction
+S = 0.99  # Initial susceptible fraction
+I = 0.01  # Initial infectious fraction
+R = 0.0  # Initial recovered fraction
 
-# Time points to simulate
-t = np.linspace(0, 200, 1000)
+# Time steps
+num_steps = 1000
+time_step = 0.1
 
-# SIRS model equations
-def sirs_model(y, t, beta, gamma, lambda_val):
-    S, I, R = y
-    dSdt = -beta * S * I + lambda_val * R
-    dIdt = beta * S * I - gamma * I
-    dRdt = gamma * I - lambda_val * R
-    return [dSdt, dIdt, dRdt]
+# Lists to store simulation results
+susceptible_list = [S]
+infectious_list = [I]
+recovered_list = [R]
 
-# Solve the differential equations
-initial_conditions = [S0, I0, R0]
-solution = odeint(sirs_model, initial_conditions, t, args=(beta, gamma, lambda_val))
+# Simulation loop
+for step in range(num_steps):
+    # Calculate new fractions for each compartment
+    new_S = S - beta * S * I * time_step + lambda_val * R * time_step
+    new_I = I + (beta * S * I - gamma * I) * time_step
+    new_R = R + gamma * I * time_step - lambda_val * R * time_step
 
-S, I, R = solution.T
+    # Update compartment fractions
+    S = new_S
+    I = new_I
+    R = new_R
+
+    # Store results
+    susceptible_list.append(S)
+    infectious_list.append(I)
+    recovered_list.append(R)
+
+# Time points for plotting
+t = [time_step * i for i in range(num_steps + 1)]
 
 # Plot the results
+import matplotlib.pyplot as plt
+
 plt.figure(figsize=(10, 6))
-plt.plot(t, S, label='Susceptible')
-plt.plot(t, I, label='Infectious')
-plt.plot(t, R, label='Recovered')
+plt.plot(t, susceptible_list, label='Susceptible')
+plt.plot(t, infectious_list, label='Infectious')
+plt.plot(t, recovered_list, label='Recovered')
 plt.xlabel('Time')
 plt.ylabel('Fraction of Population')
-plt.title('SIRS Model Simulation')
+plt.title('SIRS Model Simulation (Homogeneously Mixed)')
 plt.legend()
 plt.grid()
 plt.show()
